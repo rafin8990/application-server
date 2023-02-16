@@ -27,7 +27,7 @@ async function run() {
             const data = req.body;
             const result = await applicationCollection.insertOne(data);
             Twilio.messages
-                .create({ body: "Hello from Twilio", from: "+14632523158", to: `${req.body.mobile}` })
+                .create({ body: "Your application was submitted", from: "+14632523158", to: `${req.body.mobile}` })
                 .then(message => console.log(message.sid));
             res.send(result);
         });
