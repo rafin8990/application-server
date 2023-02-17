@@ -50,6 +50,14 @@ async function run() {
             res.send(result)
         });
 
+        app.get('/search', async (req, res) => {
+            const mobile = req.query.mobile;
+            const query = { mobile: mobile };
+            const result = await applicationCollection.find(query).toArray();
+            console.log(result)
+            res.send(result);
+        })
+
 
     }
     finally {
