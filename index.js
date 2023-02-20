@@ -1,8 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const Twilio = require('twilio')('AC04ef20ee62a7067c0bd01bc5221f3a7f', '14c10c8fe66e18da2e8d46a45b3dee5f');
-const { MessagingResponse } = require('twilio').twiml;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -26,18 +24,8 @@ async function run() {
         app.post('/application', async (req, res) => {
             const data = req.body;
             const result = await applicationCollection.insertOne(data);
-            Twilio.messages
-                .create({ body: "Your application was submitted", from: "+14632523158", to: `${req.body.mobile}` })
-                .then(message => console.log(message.sid));
-            res.send(result);
-        });
-
-        app.post('/sms', (req, res) => {
-            const twiml = new MessagingResponse();
-
-            twiml.message('The Robots are coming! Head for the hills!');
-
-            res.type('text/xml').send(twiml.toString());
+          const url=`https://app.campaignlabs.io/apis/OtpSend/?apiKey=oB8uDA4WQmbjRGw&apiSecret=g7whvO9lQa1GIik&mobile=${req.body.mobile}&message=Your%20Application%20was%20Successfully%20Submitted`
+            res.send( result);
         });
 
 
@@ -56,6 +44,27 @@ async function run() {
             const result = await applicationCollection.find(query).toArray();
             console.log(result)
             res.send(result);
+        });
+
+        app.get('/updateData/:id', async(req, res)=>{
+            const id=req.params.id;
+            const query={_id: new ObjectId(id)};
+            const result=await applicationCollection.findOne(query);
+            res.send(result)
+        })
+
+        app.put('/update/id', async(req, res)=>{
+            const id=req.params.id;
+            const filter = {_id: Object(id)};
+            const options = { upsert: true };
+            const data=req.body
+            const updatedDoc={
+                $set: {
+                    picture:data.picture
+                }
+            }
+            const result=await applicationCollection.updateOne(filter, updatedDoc, options);
+            res.send(result)
         })
 
 
