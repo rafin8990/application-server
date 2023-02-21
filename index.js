@@ -53,18 +53,18 @@ async function run() {
             res.send(result)
         })
 
-        app.put('/update/id', async(req, res)=>{
+        app.put('/update/:id', async(req, res)=>{
             const id=req.params.id;
-            const filter = {_id: Object(id)};
-            const options = { upsert: true };
+            const filter = {_id: new ObjectId(id)};
+            const option = { upsert: true };
             const data=req.body
             const updatedDoc={
                 $set: {
                     picture:data.picture
                 }
             }
-            const result=await applicationCollection.updateOne(filter, updatedDoc, options);
-            res.send(result)
+            const result=await applicationCollection.updateOne(filter, updatedDoc, option);
+            res.send(result);
         })
 
 
