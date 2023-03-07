@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
         cb(null, uniqueSuffix + '-' + file.originalname)
-      }
+    }
 })
 
 const uploader = multer({
@@ -28,11 +28,11 @@ const uploader = multer({
         console.log('this is from uploader', file.originalname)
         const supportedImage = /jpg|png/;
         const extension = path.extname(file.originalname);
-        if(supportedImage.test(extension)){
+        if (supportedImage.test(extension)) {
             cb(null, true);
         }
-        else{
-            cb(new Error('Image must be a png/jpg')) 
+        else {
+            cb(new Error('Image must be a png/jpg'))
         }
     },
     limits: {
@@ -50,6 +50,7 @@ async function run() {
     try {
 
         const applicationCollection = client.db('applicationWebsite').collection('application');
+        const inwordCollection = client.db('applicationWebsite').collection('pictures');
 
         // application post 
         app.post('/application', uploader.array('files'), async (req, res) => {
@@ -63,7 +64,7 @@ async function run() {
             const name = req.body.name;
             const mobile = req.body.mobile;
             const application = req.body.application;
-            const time=req.body.time;
+            const time = req.body.time;
             const docs = { files, name, mobile, application, time };
             const result = await applicationCollection.insertOne(docs);
             res.send(result)
@@ -93,24 +94,42 @@ async function run() {
             const result = await applicationCollection.findOne(query);
             res.send(result)
         })
-
-        app.put('/update/:id', uploader.array('picture'), async (req, res) => {
+        app.put('/update/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
-            const option = { upsert: true };
-            const picture = req.picture.map((file) => {
+            const options = { upsert: true }
+            const data = req.body;
+            const updatedDoc = {
+                $set: {
+                    picture: data
+                }
+            }
+            const result = await applicationCollection.updateOne(filter, updatedDoc, options);
+            res.send(result)
+        })
+
+        app.post('/inword', uploader.array('picture'), async (req, res) => {
+            const files = req.files.map((file) => {
                 return {
                     filename: file.filename,
                     path: file.path,
 
                 };
             });
-            const updatedDoc = {
-                $set: {
-                    picture: picture
-                }
+
+            const applicationID = req.body.applicationID[0];
+            const docs = { files, applicationID }
+            const result = await inwordCollection.insertOne(docs);
+            res.send(result)
+
+        });
+
+        app.get('/inword/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                applicationID: id
             }
-            const result = await applicationCollection.updateOne(filter, updatedDoc, option);
+            const result = await inwordCollection.findOne(query);
             res.send(result);
         })
 
