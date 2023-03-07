@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const fs = require('fs')
-const uploader = require('./uploader');
+const multer = require('multer');
+const path = require('path');
+
+
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -12,7 +14,31 @@ app.use(express.json());
 app.use(cors());
 app.use('/', express.static('postImages'));
 
+const storage = multer.diskStorage({
+    destination: 'postImages/',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, uniqueSuffix + '-' + file.originalname)
+      }
+})
 
+const uploader = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+        console.log('this is from uploader', file.originalname)
+        const supportedImage = /jpg|png/;
+        const extension = path.extname(file.originalname);
+        if(supportedImage.test(extension)){
+            cb(null, true);
+        }
+        else{
+            cb(new Error('Image must be a png/jpg')) 
+        }
+    },
+    limits: {
+        fileSize: 10000000
+    }
+});
 
 // MongoDB URL 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.nuouh7o.mongodb.net/?retryWrites=true&w=majority`;
